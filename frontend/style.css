@@ -1,0 +1,140 @@
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(to right, #eef2f3, #dfe9f3);
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  text-align: center;
+  padding: 30px;
+}
+
+h1 {
+  color: #2c3e50;
+}
+
+.subtitle {
+  color: #555;
+  margin-bottom: 20px;
+}
+
+.controls button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 10px;
+}
+
+.controls button:hover {
+  background: #2980b9;
+}
+
+.card {
+  background: white;
+  width: 70%;
+  margin: 25px auto;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background: #34495e;
+  color: white;
+  padding: 12px;
+}
+
+td {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.sjf-cell {
+  background: #f8d7da;
+  font-weight: bold;
+}
+
+.priority-cell {
+  background: #fff3cd;
+  font-weight: bold;
+}
+
+.rr-cell {
+  background: #d4edda;
+  font-weight: bold;
+}
+
+/* Page Frames */
+.frames {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.frame {
+  width: 60px;
+  height: 60px;
+  margin: 6px;
+  background: #ecf0f1;
+  border: 2px solid #2c3e50;
+  font-size: 20px;
+  line-height: 60px;
+  font-weight: bold;
+  transition: background 0.4s;
+}
+
+.frame.active {
+  background: #3498db;
+  color: white;
+}
+
+/* Gantt */
+.gantt {
+  display: flex;
+  justify-content: center;
+  margin-top: 15px;
+}
+
+.gantt-block {
+  padding: 14px;
+  margin-right: 6px;
+  background: #8e44ad;
+  color: white;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+/* Thresholds */
+label {
+  display: block;
+  margin: 10px;
+}
+
+.legend span {
+  margin: 8px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.sjf {
+  background: #f8d7da;
+}
+
+.priority {
+  background: #fff3cd;
+}
+
+.rr {
+  background: #d4edda;
+}

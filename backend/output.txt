@@ -1,0 +1,4 @@
+Process Faults Scheduler
+P1 9 SJF
+P2 1 ROUND_ROBIN
+P3 2 ROUND_ROBIN

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Memory-Aware Adaptive CPU Scheduler</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container" id="dashboard">
+
+  <h1>Memory-Aware Adaptive CPU Scheduler</h1>
+  <p class="subtitle">
+    Scheduler decisions based on Virtual Memory page faults
+  </p>
+
+  <div class="controls">
+    <button onclick="loadData()">Run Simulation</button>
+    <button onclick="exportPDF()">Export as PDF</button>
+  </div>
+
+  <!-- Scheduler Table -->
+  <div class="card">
+    <h2>Scheduler Decision Table</h2>
+    <table id="result">
+      <tr>
+        <th>Process</th>
+        <th>Page Faults</th>
+        <th>Selected Scheduler</th>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Page Frame Animation -->
+  <div class="card">
+    <h2>Virtual Memory Frame Visualization (LRU)</h2>
+    <div id="frames" class="frames"></div>
+  </div>
+
+  <!-- Gantt Chart -->
+  <div class="card">
+    <h2>CPU Execution Timeline (Gantt Chart)</h2>
+    <div id="gantt" class="gantt"></div>
+  </div>
+
+  <!-- Threshold Sliders -->
+  <div class="card">
+    <h2>Adaptive Scheduler Thresholds</h2>
+
+    <label>
+      High Fault Threshold (SJF):
+      <input type="range" min="4" max="10" value="6" id="high">
+    </label>
+
+    <label>
+      Medium Fault Threshold (Priority):
+      <input type="range" min="2" max="5" value="3" id="medium">
+    </label>
+
+    <p id="thresholdDisplay"></p>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <span class="sjf">SJF → High Page Faults</span>
+    <span class="priority">Priority → Medium Page Faults</span>
+    <span class="rr">Round Robin → Low Page Faults</span>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
