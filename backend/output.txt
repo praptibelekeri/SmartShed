@@ -1,4 +1,5 @@
-Process Faults Scheduler
-P1 9 SJF
-P2 1 ROUND_ROBIN
-P3 2 ROUND_ROBIN
+PID Burst Waiting Turnaround Faults Scheduler
+P1 3 0 3 4 ROUND_ROBIN
+P2 4 3 7 4 ROUND_ROBIN
+P3 2 7 9 4 ROUND_ROBIN
+CPU_UTIL 100.00

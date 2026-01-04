@@ -1,128 +1,196 @@
-let processList = [];
+let processes = [];
+let executionOrder = [];
+let cpuTimer = null;
+let cpuUtilTimer = null;
 
-/* ===== Threshold Sliders ===== */
-let high = document.getElementById("high");
-let medium = document.getElementById("medium");
-let display = document.getElementById("thresholdDisplay");
+/* ================= INPUTS ================= */
+const pidInput = document.getElementById("pid");
+const burstInput = document.getElementById("burst");
+const priorityInput = document.getElementById("priority");
+const framesInput = document.getElementById("frames");
+const refsInput = document.getElementById("refs");
 
-function updateThresholdText() {
-  display.innerText =
-    `High Faults > ${high.value} → SJF | Medium ≥ ${medium.value} → Priority | Else → RR`;
+/* ================= ADD PROCESS ================= */
+document.getElementById("form").onsubmit = e => {
+  e.preventDefault();
+
+  processes.push({
+    pid: pidInput.value.trim(),
+    burst: +burstInput.value,
+    priority: +priorityInput.value,
+    frames: +framesInput.value,
+    refs: refsInput.value.trim().split(" ").map(Number)
+  });
+
+  alert("Process added");
+  e.target.reset();
+};
+
+/* ================= RUN ================= */
+function run() {
+  fetch("http://localhost:5000/run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(processes)
+  })
+    .then(res => res.json())
+    .then(d => renderOutput(d.output))
+    .catch(() => alert("Backend not running"));
 }
 
-high.oninput = medium.oninput = updateThresholdText;
-updateThresholdText();
+/* ================= RENDER ================= */
+function renderOutput(text) {
+  let lines = text.trim().split("\n");
+  let tbody = document.querySelector("#table tbody");
+  tbody.innerHTML = "";
 
-/* ===== Form Submission ===== */
-document.getElementById("processForm").addEventListener("submit", function(e){
-    e.preventDefault();
-    let id = document.getElementById("procId").value.trim();
-    let faults = parseInt(document.getElementById("pageFaults").value.trim());
-    if(!id || isNaN(faults)) return alert("Please fill all fields!");
+  executionOrder = [];
+  let ganttData = [];
 
-    let sched = faults > parseInt(high.value) ? "SJF" :
-                faults >= parseInt(medium.value) ? "PRIORITY" : "RR";
+  lines.slice(1, -1).forEach(line => {
+    let p = line.split(" ");
+    if (!p[0] || p[0] === "None") return;
 
-    processList.push({id, faults, sched});
-    updateTableAndCharts();
-    document.getElementById("processForm").reset();
-});
+    let row = tbody.insertRow();
+    p.forEach(v => row.insertCell().innerText = v);
 
-/* ===== Update Table, Frames, Gantt ===== */
-function updateTableAndCharts() {
-    let table = document.getElementById("result");
-    table.innerHTML = `<tr>
-        <th>Process</th><th>Page Faults</th><th>Selected Scheduler</th>
-      </tr>`;
+    executionOrder.push(p[0]);
+    ganttData.push({ pid: p[0], burst: +p[1] });
+  });
 
-    let ganttList = [], framePages = [];
-    processList.forEach((proc, i) => {
-        let tr = table.insertRow();
-        tr.insertCell(0).innerText = proc.id;
-        tr.insertCell(1).innerText = proc.faults;
-        let schedCell = tr.insertCell(2);
-        schedCell.innerText = proc.sched;
-        if(proc.sched==="SJF") schedCell.className="sjf-cell";
-        else if(proc.sched==="PRIORITY") schedCell.className="priority-cell";
-        else schedCell.className="rr-cell";
+  document.getElementById("status").innerText =
+    "Scheduler executed successfully";
 
-        ganttList.push(proc.id);
-        framePages.push(i);
-    });
+  startCPUAnimation();
+  drawGanttChart(ganttData);
+  startCPUUtilisation(ganttData);
 
-    animateFrames(framePages);
-    drawGantt(ganttList);
+  /* ===== SAFE VM TRIGGER ===== */
+  const vmProcess = processes.find(
+    p => p.refs && p.refs.length > 0 && p.frames > 0
+  );
+
+  if (vmProcess) {
+    animateVMFrames(vmProcess.refs, vmProcess.frames);
+  } else {
+    document.getElementById("vmFrames").innerHTML =
+      "<p style='text-align:center'>No Virtual Memory data</p>";
+  }
 }
 
-/* ===== Animate Frames ===== */
-function animateFrames(pages){
-    let container = document.getElementById("frames");
-    container.innerHTML="";
-    pages.forEach((p,i)=>{
-        setTimeout(()=>{
-            let div=document.createElement("div");
-            div.className="frame active";
-            div.innerText=p;
-            container.appendChild(div);
-        }, i*500);
-    });
+/* ================= CPU ANIMATION ================= */
+function startCPUAnimation() {
+  clearInterval(cpuTimer);
+  let ctx = cpuCanvas.getContext("2d");
+  let i = 0;
+
+  cpuTimer = setInterval(() => {
+    ctx.clearRect(0, 0, 220, 220);
+
+    ctx.beginPath();
+    ctx.arc(110, 110, 80, 0, 2 * Math.PI);
+    ctx.fillStyle = "#3498db";
+    ctx.fill();
+
+    ctx.fillStyle = "white";
+    ctx.font = "22px Segoe UI";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(executionOrder[i], 110, 110);
+
+    currentProcess.innerText = "Executing: " + executionOrder[i];
+    i = (i + 1) % executionOrder.length;
+  }, 1000);
 }
 
-/* ===== Draw Gantt ===== */
-function drawGantt(processes){
-    let gantt = document.getElementById("gantt");
-    gantt.innerHTML="";
-    processes.forEach((p,i)=>{
-        let block=document.createElement("div");
-        block.className="gantt-block";
-        block.innerText=p;
-        gantt.appendChild(block);
-        setTimeout(()=>{ block.classList.add("show"); }, 50*i);
-    });
+/* ================= GANTT ================= */
+function drawGanttChart(data) {
+  ganttContainer.innerHTML = "";
+  let t = 0;
+
+  data.forEach(p => {
+    let block = document.createElement("div");
+    block.className = "gantt-block";
+    block.style.width = (p.burst * 50) + "px";
+    block.innerText = p.pid;
+
+    let time = document.createElement("div");
+    time.className = "gantt-time";
+    time.innerText = `${t} → ${t + p.burst}`;
+
+    block.appendChild(time);
+    ganttContainer.appendChild(block);
+    t += p.burst;
+  });
 }
 
-/* ===== Export PDF ===== */
-function exportPDF(){
-    html2pdf().set({
-        margin:0.5, filename:'Memory_Aware_CPU_Scheduler.pdf',
-        image:{type:'jpeg',quality:0.98},
-        html2canvas:{scale:2,useCORS:true},
-        jsPDF:{unit:'in',format:'a4',orientation:'portrait'}
-    }).from(document.getElementById("dashboard")).save();
+/* ================= CPU UTIL ================= */
+function startCPUUtilisation(data) {
+  clearInterval(cpuUtilTimer);
+
+  let total = data.reduce((a, b) => a + b.burst, 0);
+  let ctx = cpuUtilCanvas.getContext("2d");
+  let t = 0;
+
+  cpuUtilTimer = setInterval(() => {
+    let util = Math.min(Math.floor((t / total) * 100), 100);
+    ctx.clearRect(0, 0, 200, 200);
+
+    ctx.beginPath();
+    ctx.arc(100, 100, 70, 0, 2 * Math.PI);
+    ctx.strokeStyle = "#ddd";
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(
+      100,
+      100,
+      70,
+      -Math.PI / 2,
+      -Math.PI / 2 + (util / 100) * 2 * Math.PI
+    );
+    ctx.strokeStyle = "#27ae60";
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    cpuUtilText.innerText = `CPU Utilisation: ${util}%`;
+    t++;
+    if (t > total) clearInterval(cpuUtilTimer);
+  }, 1000);
 }
 
-/* ===== CPU Utilization Graph ===== */
-let ctx=document.getElementById('cpuChart').getContext('2d');
-let cpuChart=new Chart(ctx,{
-    type:'line',
-    data:{ labels:[], datasets:[{label:'CPU Usage (%)', data:[], borderColor:'#4caf50', backgroundColor:[], tension:0.3, fill:true, pointRadius:4}] },
-    options:{ 
-        responsive:true, 
-        maintainAspectRatio:false,
-        scales:{ y:{min:0,max:100,title:{display:true,text:'Usage %'}}, x:{title:{display:true,text:'Time'}} } 
-    }
-});
+/* ================= VM (FINAL & SAFE) ================= */
+function animateVMFrames(refs, frameCount) {
+  const container = document.getElementById("vmFrames");
+  container.innerHTML = "";
 
-// Pre-fill initial points
-for(let i=0;i<5;i++){
-    cpuChart.data.labels.push(i);
-    cpuChart.data.datasets[0].data.push(Math.floor(Math.random()*50)+30);
-    cpuChart.data.datasets[0].backgroundColor.push('rgba(76,175,80,0.2)');
+  let frames = new Array(frameCount).fill(null);
+
+  /* Always create frame boxes */
+  for (let i = 0; i < frameCount; i++) {
+    const box = document.createElement("div");
+    box.className = "vm-frame";
+    box.innerText = "-";
+    container.appendChild(box);
+  }
+
+  refs.forEach((page, step) => {
+    setTimeout(() => {
+      let idx = frames.indexOf(page);
+
+      if (idx === -1) {
+        idx = frames.indexOf(null);
+        if (idx === -1) idx = 0; // simplified LRU
+        frames[idx] = page;
+      }
+
+      [...container.children].forEach((box, i) => {
+        box.classList.remove("active");
+        box.innerText = frames[i] !== null ? frames[i] : "-";
+      });
+
+      container.children[idx].classList.add("active");
+    }, step * 900);
+  });
 }
-cpuChart.update();
-
-// Update graph live
-let time=5;
-setInterval(()=>{
-    let usage=Math.floor(Math.random()*100);
-    cpuChart.data.labels.push(time++);
-    cpuChart.data.datasets[0].data.push(usage);
-    cpuChart.data.datasets[0].backgroundColor.push(usage>80?'rgba(255,0,0,0.2)':'rgba(76,175,80,0.2)');
-
-    if(cpuChart.data.labels.length>20){
-        cpuChart.data.labels.shift();
-        cpuChart.data.datasets[0].data.shift();
-        cpuChart.data.datasets[0].backgroundColor.shift();
-    }
-    cpuChart.update();
-},1000);

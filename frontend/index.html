@@ -2,91 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Memory-Aware Adaptive CPU Scheduler</title>
+  <title>SmartSched-VM Dashboard</title>
+
   <link rel="stylesheet" href="style.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
+
 <body>
+<div class="container">
 
-<div class="container" id="dashboard">
+  <h1><i class="fa-solid fa-microchip"></i> SmartSched-VM Dashboard</h1>
+  <p class="subtitle">Memory-Aware Adaptive CPU Scheduler</p>
 
-  <h1><i class="fa-solid fa-microchip"></i> Memory-Aware CPU Scheduler</h1>
-  <p class="subtitle">
-    Scheduler decisions are automatically based on Virtual Memory page faults
-  </p>
-
-  <!-- Controls -->
-  <div class="controls">
-    <button onclick="exportPDF()"><i class="fa-solid fa-file-pdf"></i> Export as PDF</button>
-  </div>
-
-  <!-- User Input Form -->
+  <!-- ADD PROCESS -->
   <div class="card">
-    <h2><i class="fa-solid fa-plus"></i> Add Process</h2>
-    <form id="processForm">
-      <label>
-        Process ID:
-        <input type="text" id="procId" required placeholder="e.g. P1">
-      </label>
-      <label>
-        Page Faults:
-        <input type="number" id="pageFaults" required min="0" placeholder="e.g. 5">
-      </label>
-      <button type="submit"><i class="fa-solid fa-plus"></i> Add Process</button>
+    <h2>Add Process</h2>
+    <form id="form" class="form-grid">
+      <input id="pid" placeholder="PID (P1)" required>
+      <input id="burst" type="number" placeholder="Burst Time" required>
+      <input id="priority" type="number" placeholder="Priority" required>
+      <input id="frames" type="number" placeholder="Frames" required>
+      <input id="refs" placeholder="Refs (1 2 3)" required>
+      <button type="submit">Add Process</button>
     </form>
   </div>
 
-  <!-- Scheduler Table -->
+  <!-- RUN -->
+  <div class="controls">
+    <button onclick="run()">Run Scheduler</button>
+  </div>
+
+  <p id="status" class="status-text">Waiting for input…</p>
+
+  <!-- TABLE -->
   <div class="card">
-    <h2><i class="fa-solid fa-table"></i> Scheduler Decision Table</h2>
-    <table id="result">
-      <tr>
-        <th>Process</th>
-        <th>Page Faults</th>
-        <th>Selected Scheduler</th>
-      </tr>
+    <h2>Scheduler Decision Table</h2>
+    <table id="table">
+      <thead>
+        <tr>
+          <th>PID</th><th>Burst</th><th>Waiting</th>
+          <th>Turnaround</th><th>Faults</th><th>Scheduler</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
     </table>
   </div>
 
-  <!-- Page Frame Animation -->
+  <!-- CPU EXECUTION -->
   <div class="card">
-    <h2><i class="fa-solid fa-layer-group"></i> Virtual Memory Frames (LRU)</h2>
-    <div id="frames" class="frames"></div>
+    <h2>CPU Execution (Live)</h2>
+    <canvas id="cpuCanvas" width="220" height="220"></canvas>
+    <p id="currentProcess" class="status-text">CPU Idle</p>
   </div>
 
-  <!-- Gantt Chart -->
+  <!-- GANTT -->
   <div class="card">
-    <h2><i class="fa-solid fa-chart-bar"></i> CPU Execution Timeline (Gantt)</h2>
-    <div id="gantt" class="gantt"></div>
+    <h2>CPU Execution Timeline (Gantt)</h2>
+    <div id="ganttContainer"></div>
   </div>
 
-  <!-- CPU Utilization Graph -->
+  <!-- CPU UTIL -->
   <div class="card">
-    <h2><i class="fa-solid fa-tachometer-alt"></i> CPU Utilization</h2>
-    <canvas id="cpuChart"></canvas>
+    <h2>CPU Utilisation</h2>
+    <canvas id="cpuUtilCanvas" width="200" height="200"></canvas>
+    <p id="cpuUtilText" class="status-text">CPU Utilisation: 0%</p>
   </div>
 
-  <!-- Threshold Sliders -->
+  <!-- VM -->
   <div class="card">
-    <h2><i class="fa-solid fa-sliders"></i> Adaptive Scheduler Thresholds</h2>
-    <label>
-      High Fault Threshold (SJF):
-      <input type="range" min="4" max="10" value="6" id="high">
-    </label>
-    <label>
-      Medium Fault Threshold (Priority):
-      <input type="range" min="2" max="5" value="3" id="medium">
-    </label>
-    <p id="thresholdDisplay"></p>
-  </div>
-
-  <!-- Legend -->
-  <div class="legend">
-    <span class="sjf"><i class="fa-solid fa-fire"></i> SJF → High Page Faults</span>
-    <span class="priority"><i class="fa-solid fa-balance-scale"></i> Priority → Medium Page Faults</span>
-    <span class="rr"><i class="fa-solid fa-rotate-right"></i> RR → Low Page Faults</span>
+    <h2>Virtual Memory Frames (LRU)</h2>
+    <div id="vmFrames" class="vm-frames"></div>
   </div>
 
 </div>
