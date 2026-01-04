@@ -4,24 +4,43 @@
   <meta charset="UTF-8">
   <title>Memory-Aware Adaptive CPU Scheduler</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
 
 <div class="container" id="dashboard">
 
-  <h1>Memory-Aware Adaptive CPU Scheduler</h1>
+  <h1><i class="fa-solid fa-microchip"></i> Memory-Aware CPU Scheduler</h1>
   <p class="subtitle">
-    Scheduler decisions based on Virtual Memory page faults
+    Scheduler decisions are automatically based on Virtual Memory page faults
   </p>
 
+  <!-- Controls -->
   <div class="controls">
-    <button onclick="loadData()">Run Simulation</button>
-    <button onclick="exportPDF()">Export as PDF</button>
+    <button onclick="exportPDF()"><i class="fa-solid fa-file-pdf"></i> Export as PDF</button>
+  </div>
+
+  <!-- User Input Form -->
+  <div class="card">
+    <h2><i class="fa-solid fa-plus"></i> Add Process</h2>
+    <form id="processForm">
+      <label>
+        Process ID:
+        <input type="text" id="procId" required placeholder="e.g. P1">
+      </label>
+      <label>
+        Page Faults:
+        <input type="number" id="pageFaults" required min="0" placeholder="e.g. 5">
+      </label>
+      <button type="submit"><i class="fa-solid fa-plus"></i> Add Process</button>
+    </form>
   </div>
 
   <!-- Scheduler Table -->
   <div class="card">
-    <h2>Scheduler Decision Table</h2>
+    <h2><i class="fa-solid fa-table"></i> Scheduler Decision Table</h2>
     <table id="result">
       <tr>
         <th>Process</th>
@@ -33,44 +52,45 @@
 
   <!-- Page Frame Animation -->
   <div class="card">
-    <h2>Virtual Memory Frame Visualization (LRU)</h2>
+    <h2><i class="fa-solid fa-layer-group"></i> Virtual Memory Frames (LRU)</h2>
     <div id="frames" class="frames"></div>
   </div>
 
   <!-- Gantt Chart -->
   <div class="card">
-    <h2>CPU Execution Timeline (Gantt Chart)</h2>
+    <h2><i class="fa-solid fa-chart-bar"></i> CPU Execution Timeline (Gantt)</h2>
     <div id="gantt" class="gantt"></div>
+  </div>
+
+  <!-- CPU Utilization Graph -->
+  <div class="card">
+    <h2><i class="fa-solid fa-tachometer-alt"></i> CPU Utilization</h2>
+    <canvas id="cpuChart"></canvas>
   </div>
 
   <!-- Threshold Sliders -->
   <div class="card">
-    <h2>Adaptive Scheduler Thresholds</h2>
-
+    <h2><i class="fa-solid fa-sliders"></i> Adaptive Scheduler Thresholds</h2>
     <label>
       High Fault Threshold (SJF):
       <input type="range" min="4" max="10" value="6" id="high">
     </label>
-
     <label>
       Medium Fault Threshold (Priority):
       <input type="range" min="2" max="5" value="3" id="medium">
     </label>
-
     <p id="thresholdDisplay"></p>
   </div>
 
   <!-- Legend -->
   <div class="legend">
-    <span class="sjf">SJF → High Page Faults</span>
-    <span class="priority">Priority → Medium Page Faults</span>
-    <span class="rr">Round Robin → Low Page Faults</span>
+    <span class="sjf"><i class="fa-solid fa-fire"></i> SJF → High Page Faults</span>
+    <span class="priority"><i class="fa-solid fa-balance-scale"></i> Priority → Medium Page Faults</span>
+    <span class="rr"><i class="fa-solid fa-rotate-right"></i> RR → Low Page Faults</span>
   </div>
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 <script src="script.js"></script>
-
 </body>
 </html>
